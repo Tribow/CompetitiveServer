@@ -17,6 +17,7 @@ namespace Glicko2Rankings
         public override SemanticVersion ServerVersion => new SemanticVersion("0.4.0");
 
         private bool matchEnded = false;
+        private bool calculatingRankings = false;
         private List<string> playersInMatch = new List<string>();
         private List<int> timeInMatch = new List<int>();
         private SimulateMatch calculateMatch = new SimulateMatch();
@@ -40,7 +41,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.0.3"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.0.7"));
                 playersInMatch.Clear();
                 timeInMatch.Clear();
                 matchEnded = false;
@@ -52,39 +53,51 @@ namespace Glicko2Rankings
             Server.OnChatMessageEvent.Connect(message =>
             {
                 bool allPlayersFinished = true;
-                playersInMatch.Clear();
-                timeInMatch.Clear();
 
-                if (Server.DistancePlayers.Count > 0 && !matchEnded)
+                if (Server.DistancePlayers.Count > 0 && !matchEnded && !calculatingRankings)
                 {
                     
                     List<DistancePlayer> distancePlayers = new List<DistancePlayer>(Server.DistancePlayers.Values);
                     foreach (DistancePlayer player in distancePlayers)
                     {
-                        if (player.Car != null && player.Car.Finished && player.Car.FinishType == Distance::FinishType.Normal)
+                        if (player.Car != null && player.Car.Finished && player.Car.FinishType == Distance::FinishType.Normal && !calculatingRankings)
                         {
                             
                             playersInMatch.Add(player.Name);
                             timeInMatch.Add(player.Car.FinishData);
                         }
-                        else if (player.Car != null && player.Car.Finished && player.Car.FinishType == Distance::FinishType.Spectate || player.Car.FinishType == Distance::FinishType.JoinedLate)
+                        else if (player.Car != null && player.Car.Finished)
                         {
-                            playersInMatch.Add(player.Name);
-                            timeInMatch.Add(0);
+                            if (player.Car.FinishType == Distance::FinishType.Spectate || player.Car.FinishType == Distance::FinishType.DNF && !calculatingRankings)
+                            {
+                                playersInMatch.Add(player.Name);
+                                timeInMatch.Add(0);
+                            }
                         }
                         else
                         {
-                            allPlayersFinished = false;
+                            if (!calculatingRankings)
+                            {
+                                allPlayersFinished = false;
+                                playersInMatch.Clear();
+                                timeInMatch.Clear();
+                            }
                         }
                     }
                 }
                 else
                 {
-                    allPlayersFinished = false;
+                    if (!calculatingRankings)
+                    {
+                        allPlayersFinished = false;
+                        playersInMatch.Clear();
+                        timeInMatch.Clear();
+                    }
                 }
 
-                if (allPlayersFinished && !matchEnded)
+                if (allPlayersFinished && !matchEnded && !calculatingRankings)
                 {
+                    calculatingRankings = true;
                     matchEnded = true;
 
                     if (playersInMatch.Count > 1)
@@ -108,6 +121,7 @@ namespace Glicko2Rankings
                     }
 
                     Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
+                    calculatingRankings = false;
                 }
 
             });
