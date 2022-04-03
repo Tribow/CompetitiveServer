@@ -17,14 +17,12 @@ namespace Glicko2Rankings
         public override SemanticVersion ServerVersion => new SemanticVersion("0.4.0");
 
         private bool matchEnded = false;
-        private bool calculatingRankings = false;
-        private List<string> playersInMatch = new List<string>();
-        private List<int> timeInMatch = new List<int>();
         private SimulateMatch calculateMatch = new SimulateMatch();
 
         public override void Start()
         {
             Log.Info("Welcome to the ranking system!");
+            
             
 
             Server.OnPlayerValidatedEvent.Connect(player =>
@@ -41,67 +39,53 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.0.7"));
-                playersInMatch.Clear();
-                timeInMatch.Clear();
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.0"));
                 matchEnded = false;
             });
 
-            //There might be a more efficient and cleaner way to do this, but for now I don't know it
             //Loop through all players and check if all finished, if they all did grab their finish times
             //If enough players were in a match, calculate their rank and display it
-            Server.OnChatMessageEvent.Connect(message =>
+            DistanceServerMain.GetEvent<Events.Instanced.Finished>().Connect((instance, data) =>
             {
                 bool allPlayersFinished = true;
 
-                if (Server.DistancePlayers.Count > 0 && !matchEnded && !calculatingRankings)
+                List<DistancePlayer> distancePlayers = new List<DistancePlayer>(Server.DistancePlayers.Values);
+
+                if (Server.DistancePlayers.Count > 0 && !matchEnded)
                 {
                     
-                    List<DistancePlayer> distancePlayers = new List<DistancePlayer>(Server.DistancePlayers.Values);
+                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:bruh", "There are " + distancePlayers.Count + " players!"));
+
                     foreach (DistancePlayer player in distancePlayers)
                     {
-                        if (player.Car != null && player.Car.Finished && player.Car.FinishType == Distance::FinishType.Normal && !calculatingRankings)
+                        if (!player.Car.Finished)
                         {
-                            
-                            playersInMatch.Add(player.Name);
-                            timeInMatch.Add(player.Car.FinishData);
+                            allPlayersFinished = false;
                         }
-                        else if (player.Car != null && player.Car.Finished)
-                        {
-                            if (player.Car.FinishType == Distance::FinishType.Spectate || player.Car.FinishType == Distance::FinishType.DNF && !calculatingRankings)
-                            {
-                                playersInMatch.Add(player.Name);
-                                timeInMatch.Add(0);
-                            }
-                        }
-                        else
-                        {
-                            if (!calculatingRankings)
-                            {
-                                allPlayersFinished = false;
-                                playersInMatch.Clear();
-                                timeInMatch.Clear();
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (!calculatingRankings)
-                    {
-                        allPlayersFinished = false;
-                        playersInMatch.Clear();
-                        timeInMatch.Clear();
                     }
                 }
 
-                if (allPlayersFinished && !matchEnded && !calculatingRankings)
+                if (allPlayersFinished && !matchEnded)
                 {
-                    calculatingRankings = true;
                     matchEnded = true;
 
-                    if (playersInMatch.Count > 1)
+                    List<string> playersInMatch = new List<string>();
+                    List<int> timeInMatch = new List<int>();
+
+                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:wow", "There are " + distancePlayers.Count + " players!"));
+
+                    if (distancePlayers.Count > 1)
                     {
+                        foreach (DistancePlayer player in distancePlayers)
+                        {
+                            playersInMatch.Add(player.Name);
+
+                            if (player.Car.FinishType == Distance::FinishType.Normal)
+                                timeInMatch.Add(player.Car.FinishData);
+                            else
+                                timeInMatch.Add(0);
+                        }
+
                         //Update Player ratings
                         foreach (string player in playersInMatch)
                         {
@@ -114,19 +98,18 @@ namespace Glicko2Rankings
                         //Post rankings in chat
                         List<int> playerRankings = calculateMatch.GetSpecificRatings(playersInMatch);
 
-                        for(int i = 0; i < playersInMatch.Count; i++)
+                        for (int i = 0; i < playersInMatch.Count; i++)
                         {
                             Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + playersInMatch[i] + "'s new rank: [-]" + playerRankings[i]));
                         }
+
+                        playersInMatch.Clear();
+                        timeInMatch.Clear();
                     }
 
                     Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
-                    calculatingRankings = false;
                 }
-
             });
-
-            
         }
     }
 }
