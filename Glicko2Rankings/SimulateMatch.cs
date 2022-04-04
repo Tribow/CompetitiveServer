@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MongoDB.Driver;
 
 namespace Glicko2Rankings
 {
@@ -10,13 +11,20 @@ namespace Glicko2Rankings
         private Dictionary<string, Rating> players = new Dictionary<string, Rating>();
         private readonly RatingCalculator calculator = new RatingCalculator();
         private readonly RatingPeriodResults results = new RatingPeriodResults();
+        private MongoClientSettings settings;
+        private MongoClient client;
+        private IMongoDatabase database;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public SimulateMatch()
         {
-
+            
+            settings = MongoClientSettings.FromConnectionString("rSc4HjHDHoBFNrLU");
+            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
+            client = new MongoClient(settings);
+            database = client.GetDatabase("rankings");
         }
 
         /// <summary>
@@ -101,7 +109,7 @@ namespace Glicko2Rankings
                 {
                     ratings.Add((int)players[player].GetRating());
                 }
-                catch(KeyNotFoundException)
+                catch (KeyNotFoundException)
                 {
                     Log.Info("Player does not have a rating!");
                 }
@@ -124,7 +132,7 @@ namespace Glicko2Rankings
             {
                 rating = (int)players[playerName].GetRating();
             }
-            catch(KeyNotFoundException)
+            catch (KeyNotFoundException)
             {
                 Log.Info("Player does not have a rating!");
             }

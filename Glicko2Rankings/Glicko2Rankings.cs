@@ -3,9 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using MongoDB.Driver;
 
 namespace Glicko2Rankings
 {
@@ -22,8 +21,8 @@ namespace Glicko2Rankings
         public override void Start()
         {
             Log.Info("Welcome to the ranking system!");
-            
-            
+
+
 
             Server.OnPlayerValidatedEvent.Connect(player =>
             {
@@ -39,7 +38,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.0"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.1"));
                 matchEnded = false;
             });
 
@@ -53,7 +52,7 @@ namespace Glicko2Rankings
 
                 if (Server.DistancePlayers.Count > 0 && !matchEnded)
                 {
-                    
+
                     Server.SayChat(DistanceChat.Server("Glicko2Rankings:bruh", "There are " + distancePlayers.Count + " players!"));
 
                     foreach (DistancePlayer player in distancePlayers)
