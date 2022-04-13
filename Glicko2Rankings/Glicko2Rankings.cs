@@ -38,7 +38,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.1"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.95"));
                 matchEnded = false;
             });
 
@@ -83,12 +83,6 @@ namespace Glicko2Rankings
                                 timeInMatch.Add(player.Car.FinishData);
                             else
                                 timeInMatch.Add(0);
-                        }
-
-                        //Update Player ratings
-                        foreach (string player in playersInMatch)
-                        {
-                            calculateMatch.InputPlayerInMatch(player);
                         }
 
                         //Calculate rankings

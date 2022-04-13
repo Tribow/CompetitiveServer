@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using MongoDB.Driver;
+using System.Xml;
+using System.Xml.XPath;
+using System.IO;
+//using System.Reflection;
 
 namespace Glicko2Rankings
 {
@@ -11,42 +14,111 @@ namespace Glicko2Rankings
         private Dictionary<string, Rating> players = new Dictionary<string, Rating>();
         private readonly RatingCalculator calculator = new RatingCalculator();
         private readonly RatingPeriodResults results = new RatingPeriodResults();
-        private MongoClientSettings settings;
-        private MongoClient client;
-        private IMongoDatabase database;
+        private XmlDocument rankXml;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public SimulateMatch()
         {
-            
-            settings = MongoClientSettings.FromConnectionString("rSc4HjHDHoBFNrLU");
-            settings.ServerApi = new ServerApi(ServerApiVersion.V1);
-            client = new MongoClient(settings);
-            database = client.GetDatabase("rankings");
+            //Log.Debug(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            if (File.Exists(Directory.GetCurrentDirectory() + @"\RankData.xml"))
+            {
+                Log.Info("RankData file exists");
+                rankXml.Load(Directory.GetCurrentDirectory() + @"\RankData.xml");
+
+                //Fill the dictionary with data from the xml here.
+            }
+            else
+            {
+                //This will be moved to a "CreateDocument" function later.
+                rankXml = new XmlDocument();
+                XmlNode root = rankXml.CreateElement("RankData");
+                XmlNode player = rankXml.CreateElement("Player");
+                /*XmlAttribute id = rankXml.CreateAttribute("id");
+                id.Value = rankXml.SelectNodes("Data/Player").Count.ToString();
+                XmlElement name = rankXml.CreateElement("Name");
+                XmlElement rank = rankXml.CreateElement("Rank");
+                rankXml.AppendChild(root);
+                root.AppendChild(player);
+                player.Attributes.Append(id);
+                player.AppendChild(name);
+                name.InnerText = "Test";
+                player.AppendChild(rank);
+                rank.InnerText = "1500";*/
+                rankXml.AppendChild(root);
+                root.AppendChild(player);
+
+
+                rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            }
         }
 
         /// <summary>
-        /// Adds a player into the match. New players get added to the rating database
+        /// Adds new players from the match into the database.
         /// </summary>
         /// <param name="player"></param>
-        public void InputPlayerInMatch(string player)
+        private void InputPlayerInMatch(string player)
         {
             Rating playerRating = new Rating(calculator);
+      
+            //For updating the XML
+            XmlNodeList nodes = rankXml.SelectNodes("//Player");
+            foreach (XmlNode node in nodes)
+            {
+                Log.Info(node.Value);
+                if (player == node.Attributes[0].Value)
+                {
+                    Log.Info("Player already exists in database!");
+                    return;
+                }
+            }
+
+            XmlNode root = rankXml.SelectSingleNode("RankData");
+            XmlNode playerNode = rankXml.CreateElement("Player");
+            XmlAttribute name = rankXml.CreateAttribute("name");
+            name.Value = player;
+            XmlElement rank = rankXml.CreateElement("Rank");
+            root.AppendChild(playerNode);
+            playerNode.Attributes.Append(name);
+            playerNode.AppendChild(rank);
+            rank.InnerText = ((int)playerRating.GetRating()).ToString();
+            Log.Info("Added " + player + " to the Xml");
+
+            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+
+
+            //For updating the Dictionary
             try
             {
                 players.Add(player, playerRating);
             }
             catch (ArgumentException)
             {
-                Log.Info("Player already exists!");
+                Log.Info("Player already exists locally! (This should not ever be seen)");
             }
         }
 
 
+        private void UpdateXml()
+        {
+            List<string> playerNames = new List<string>(players.Keys);
+            for(int i = 0; i < playerNames.Count; i++)
+            {
+                Log.Debug(rankXml.SelectSingleNode("RankData/Player[@name='" + playerNames[i] + "']/Rank").InnerText + " Rank of player " + playerNames[i]);
+                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + playerNames[i] + "']/Rank");
+                nodeToChange.InnerText = ((int)players[playerNames[i]].GetRating()).ToString();
+            }
+        }
+
         public void CalculateResults(List<string> playerNames, List<int> playerTimes)
         {
+            //Be sure any new players get added into database
+            foreach(string player in playerNames)
+            {
+                InputPlayerInMatch(player);
+            }
+
             //Just in case something was wrong
             if (playerNames.Count != playerTimes.Count)
             {
@@ -91,7 +163,12 @@ namespace Glicko2Rankings
 
 
             calculator.UpdateRatings(results);
+
+            
+
         }
+
+        //THESE FUNCTIONS NEED TO BE CHANGED SO THAT THE DATA IS GRABBED FROM THE XML AND NOT THE DICTIONARY
 
         /// <summary>
         /// Returns a list of ratings in the order of the list it was given.

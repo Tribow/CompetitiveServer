@@ -135,6 +135,7 @@
   <ItemGroup>
     <Compile Include="Glicko2Rankings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RankModel.cs" />
     <Compile Include="Rating.cs" />
     <Compile Include="RatingCalculator.cs" />
     <Compile Include="RatingPeriodResults.cs" />
