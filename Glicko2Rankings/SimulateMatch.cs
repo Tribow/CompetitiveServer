@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Xml.XPath;
+using System.Security;
 using System.IO;
 //using System.Reflection;
 
@@ -14,7 +15,7 @@ namespace Glicko2Rankings
         private Dictionary<string, Rating> players = new Dictionary<string, Rating>();
         private readonly RatingCalculator calculator = new RatingCalculator();
         private readonly RatingPeriodResults results = new RatingPeriodResults();
-        private XmlDocument rankXml;
+        private XmlDocument rankXml = new XmlDocument();
 
         /// <summary>
         /// Constructor.
@@ -24,28 +25,46 @@ namespace Glicko2Rankings
             //Log.Debug(Directory.GetCurrentDirectory() + @"\RankData.xml");
             if (File.Exists(Directory.GetCurrentDirectory() + @"\RankData.xml"))
             {
-                Log.Info("RankData file exists");
+                Log.Info("RankData file exists!");
                 rankXml.Load(Directory.GetCurrentDirectory() + @"\RankData.xml");
 
                 //Fill the dictionary with data from the xml here.
+                XmlNodeList nodes = rankXml.SelectNodes("//Player");
+                foreach (XmlNode node in nodes)
+                {
+                    
+                    if (node.Attributes.Count > 0)
+                    {
+                        //Add the Player node's information to our dictionary to make sure it updates rankings correctly
+                        Rating rating = new Rating(calculator);
+                        double importantNumber;
+                        Log.Debug(node.FirstChild.InnerText);
+                        Log.Debug(node.ChildNodes[1].InnerText);
+                        Log.Debug(node.LastChild.InnerText);
+                        bool success = double.TryParse(node.FirstChild.InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetRatingDeviation(1500); //1500 is the default rank
+                        else
+                            rating.SetRating(importantNumber);
+                        success = double.TryParse(node.ChildNodes[1].InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetRatingDeviation(350); //350 is the default RatingDeviation
+                        else
+                            rating.SetRatingDeviation(importantNumber);
+                        success = double.TryParse(node.LastChild.InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetVolatility(0.06); //0.06 is the default volatility
+                        else
+                            rating.SetVolatility(importantNumber);
+                        players.Add(node.Attributes[0].Value, rating);
+                    }
+                }
             }
             else
             {
-                //This will be moved to a "CreateDocument" function later.
                 rankXml = new XmlDocument();
                 XmlNode root = rankXml.CreateElement("RankData");
                 XmlNode player = rankXml.CreateElement("Player");
-                /*XmlAttribute id = rankXml.CreateAttribute("id");
-                id.Value = rankXml.SelectNodes("Data/Player").Count.ToString();
-                XmlElement name = rankXml.CreateElement("Name");
-                XmlElement rank = rankXml.CreateElement("Rank");
-                rankXml.AppendChild(root);
-                root.AppendChild(player);
-                player.Attributes.Append(id);
-                player.AppendChild(name);
-                name.InnerText = "Test";
-                player.AppendChild(rank);
-                rank.InnerText = "1500";*/
                 rankXml.AppendChild(root);
                 root.AppendChild(player);
 
@@ -66,23 +85,32 @@ namespace Glicko2Rankings
             XmlNodeList nodes = rankXml.SelectNodes("//Player");
             foreach (XmlNode node in nodes)
             {
-                Log.Info(node.Value);
-                if (player == node.Attributes[0].Value)
+                if (node.Attributes.Count > 0)
                 {
-                    Log.Info("Player already exists in database!");
-                    return;
+                    if (player == SecurityElement.Escape(node.Attributes[0].Value))
+                    {
+                        Log.Info("Player already exists in database!");
+                        return;
+                    }
                 }
             }
 
+            //Sanitize player names like removing quotes or other symbols that may break XPATH
             XmlNode root = rankXml.SelectSingleNode("RankData");
             XmlNode playerNode = rankXml.CreateElement("Player");
             XmlAttribute name = rankXml.CreateAttribute("name");
-            name.Value = player;
+            name.Value = SecurityElement.Escape(player);
             XmlElement rank = rankXml.CreateElement("Rank");
+            XmlElement rankDeviation = rankXml.CreateElement("RankDeviation");
+            XmlElement volatility = rankXml.CreateElement("Volatility");
             root.AppendChild(playerNode);
             playerNode.Attributes.Append(name);
             playerNode.AppendChild(rank);
-            rank.InnerText = ((int)playerRating.GetRating()).ToString();
+            rank.InnerText = playerRating.GetRating().ToString();
+            playerNode.AppendChild(rankDeviation);
+            rankDeviation.InnerText = playerRating.GetRatingDeviation().ToString();
+            playerNode.AppendChild(volatility);
+            volatility.InnerText = playerRating.GetVolatility().ToString();
             Log.Info("Added " + player + " to the Xml");
 
             rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
@@ -105,10 +133,16 @@ namespace Glicko2Rankings
             List<string> playerNames = new List<string>(players.Keys);
             for(int i = 0; i < playerNames.Count; i++)
             {
-                Log.Debug(rankXml.SelectSingleNode("RankData/Player[@name='" + playerNames[i] + "']/Rank").InnerText + " Rank of player " + playerNames[i]);
-                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + playerNames[i] + "']/Rank");
-                nodeToChange.InnerText = ((int)players[playerNames[i]].GetRating()).ToString();
+                string safeString = SecurityElement.Escape(playerNames[i]);
+                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Rank");
+                nodeToChange.InnerText = players[playerNames[i]].GetRating().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/RankDeviation");
+                nodeToChange.InnerText = players[playerNames[i]].GetRatingDeviation().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Volatility");
+                nodeToChange.InnerText = players[playerNames[i]].GetVolatility().ToString();
             }
+            
+            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
         }
 
         public void CalculateResults(List<string> playerNames, List<int> playerTimes)
@@ -163,8 +197,7 @@ namespace Glicko2Rankings
 
 
             calculator.UpdateRatings(results);
-
-            
+            UpdateXml();
 
         }
 
