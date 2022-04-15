@@ -43,7 +43,7 @@ namespace Glicko2Rankings
         /// Players within the resultset who did not compete during the rating period
         /// will have their diation increase.
         /// 
-        /// Not that this method will clear results held in the association result set.
+        /// Note that this method will clear results held in the association result set.
         /// </summary>
         /// <param name="results"></param>
         public void UpdateRatings(RatingPeriodResults results)

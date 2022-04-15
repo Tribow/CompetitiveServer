@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1831
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glicko2Rankings", "Glicko2Rankings\Glicko2Rankings.csproj", "{C8B12ED9-6824-4191-BEE0-663E85219420}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Glicko2Rankings", "Glicko2Rankings\Glicko2Rankings.csproj", "{FB6E440B-5F35-4193-BDA6-EB5268BB7023}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,12 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C8B12ED9-6824-4191-BEE0-663E85219420}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C8B12ED9-6824-4191-BEE0-663E85219420}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C8B12ED9-6824-4191-BEE0-663E85219420}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C8B12ED9-6824-4191-BEE0-663E85219420}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB6E440B-5F35-4193-BDA6-EB5268BB7023}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB6E440B-5F35-4193-BDA6-EB5268BB7023}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB6E440B-5F35-4193-BDA6-EB5268BB7023}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB6E440B-5F35-4193-BDA6-EB5268BB7023}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {32A6072E-A39E-44D2-B5C8-D84282BA07AC}
 	EndGlobalSection
 EndGlobal

@@ -3,9 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using MongoDB.Driver;
 
 namespace Glicko2Rankings
 {
@@ -14,7 +13,7 @@ namespace Glicko2Rankings
         public override string DisplayName => "Glicko-2 Rankings";
         public override string Author => "Tribow; Discord: Tribow#5673";
         public override int Priority => -6;
-        public override SemanticVersion ServerVersion => new SemanticVersion("0.4.0");
+        public override SemanticVersion ServerVersion => new SemanticVersion("0.4.1");
 
         private bool matchEnded = false;
         private SimulateMatch calculateMatch = new SimulateMatch();
@@ -22,8 +21,8 @@ namespace Glicko2Rankings
         public override void Start()
         {
             Log.Info("Welcome to the ranking system!");
-            
-            
+
+
 
             Server.OnPlayerValidatedEvent.Connect(player =>
             {
@@ -39,7 +38,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.1.0"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.2.7"));
                 matchEnded = false;
             });
 
@@ -53,9 +52,6 @@ namespace Glicko2Rankings
 
                 if (Server.DistancePlayers.Count > 0 && !matchEnded)
                 {
-                    
-                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:bruh", "There are " + distancePlayers.Count + " players!"));
-
                     foreach (DistancePlayer player in distancePlayers)
                     {
                         if (!player.Car.Finished)
@@ -72,8 +68,6 @@ namespace Glicko2Rankings
                     List<string> playersInMatch = new List<string>();
                     List<int> timeInMatch = new List<int>();
 
-                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:wow", "There are " + distancePlayers.Count + " players!"));
-
                     if (distancePlayers.Count > 1)
                     {
                         foreach (DistancePlayer player in distancePlayers)
@@ -84,12 +78,6 @@ namespace Glicko2Rankings
                                 timeInMatch.Add(player.Car.FinishData);
                             else
                                 timeInMatch.Add(0);
-                        }
-
-                        //Update Player ratings
-                        foreach (string player in playersInMatch)
-                        {
-                            calculateMatch.InputPlayerInMatch(player);
                         }
 
                         //Calculate rankings

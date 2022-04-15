@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.XPath;
+using System.Security;
+using System.IO;
+//using System.Reflection;
 
 namespace Glicko2Rankings
 {
@@ -10,35 +15,144 @@ namespace Glicko2Rankings
         private Dictionary<string, Rating> players = new Dictionary<string, Rating>();
         private readonly RatingCalculator calculator = new RatingCalculator();
         private readonly RatingPeriodResults results = new RatingPeriodResults();
+        private XmlDocument rankXml = new XmlDocument();
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public SimulateMatch()
         {
+            //Log.Debug(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            if (File.Exists(Directory.GetCurrentDirectory() + @"\RankData.xml"))
+            {
+                Log.Info("RankData file exists!");
+                rankXml.Load(Directory.GetCurrentDirectory() + @"\RankData.xml");
 
+                //Fill the dictionary with data from the xml here.
+                XmlNodeList nodes = rankXml.SelectNodes("//Player");
+                foreach (XmlNode node in nodes)
+                {
+                    
+                    if (node.Attributes.Count > 0)
+                    {
+                        //Add the Player node's information to our dictionary to make sure it updates rankings correctly
+                        Rating rating = new Rating(calculator);
+                        double importantNumber;
+                        Log.Debug(node.FirstChild.InnerText);
+                        Log.Debug(node.ChildNodes[1].InnerText);
+                        Log.Debug(node.LastChild.InnerText);
+                        bool success = double.TryParse(node.FirstChild.InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetRatingDeviation(1500); //1500 is the default rank
+                        else
+                            rating.SetRating(importantNumber);
+                        success = double.TryParse(node.ChildNodes[1].InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetRatingDeviation(350); //350 is the default RatingDeviation
+                        else
+                            rating.SetRatingDeviation(importantNumber);
+                        success = double.TryParse(node.LastChild.InnerText, out importantNumber);
+                        if (!success)
+                            rating.SetVolatility(0.06); //0.06 is the default volatility
+                        else
+                            rating.SetVolatility(importantNumber);
+                        players.Add(node.Attributes[0].Value, rating);
+                    }
+                }
+            }
+            else
+            {
+                rankXml = new XmlDocument();
+                XmlNode root = rankXml.CreateElement("RankData");
+                XmlNode player = rankXml.CreateElement("Player");
+                rankXml.AppendChild(root);
+                root.AppendChild(player);
+
+
+                rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            }
         }
 
         /// <summary>
-        /// Adds a player into the match. New players get added to the rating database
+        /// Adds new players from the match into the database.
         /// </summary>
         /// <param name="player"></param>
-        public void InputPlayerInMatch(string player)
+        private void InputPlayerInMatch(string player)
         {
             Rating playerRating = new Rating(calculator);
+      
+            //For updating the XML
+            XmlNodeList nodes = rankXml.SelectNodes("//Player");
+            foreach (XmlNode node in nodes)
+            {
+                if (node.Attributes.Count > 0)
+                {
+                    if (player == SecurityElement.Escape(node.Attributes[0].Value))
+                    {
+                        Log.Info("Player already exists in database!");
+                        return;
+                    }
+                }
+            }
+
+            //Sanitize player names like removing quotes or other symbols that may break XPATH
+            XmlNode root = rankXml.SelectSingleNode("RankData");
+            XmlNode playerNode = rankXml.CreateElement("Player");
+            XmlAttribute name = rankXml.CreateAttribute("name");
+            name.Value = SecurityElement.Escape(player);
+            XmlElement rank = rankXml.CreateElement("Rank");
+            XmlElement rankDeviation = rankXml.CreateElement("RankDeviation");
+            XmlElement volatility = rankXml.CreateElement("Volatility");
+            root.AppendChild(playerNode);
+            playerNode.Attributes.Append(name);
+            playerNode.AppendChild(rank);
+            rank.InnerText = playerRating.GetRating().ToString();
+            playerNode.AppendChild(rankDeviation);
+            rankDeviation.InnerText = playerRating.GetRatingDeviation().ToString();
+            playerNode.AppendChild(volatility);
+            volatility.InnerText = playerRating.GetVolatility().ToString();
+            Log.Info("Added " + player + " to the Xml");
+
+            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+
+
+            //For updating the Dictionary
             try
             {
                 players.Add(player, playerRating);
             }
             catch (ArgumentException)
             {
-                Log.Info("Player already exists!");
+                Log.Info("Player already exists locally! (This should not ever be seen)");
             }
         }
 
 
+        private void UpdateXml()
+        {
+            List<string> playerNames = new List<string>(players.Keys);
+            for(int i = 0; i < playerNames.Count; i++)
+            {
+                string safeString = SecurityElement.Escape(playerNames[i]);
+                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Rank");
+                nodeToChange.InnerText = players[playerNames[i]].GetRating().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/RankDeviation");
+                nodeToChange.InnerText = players[playerNames[i]].GetRatingDeviation().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Volatility");
+                nodeToChange.InnerText = players[playerNames[i]].GetVolatility().ToString();
+            }
+            
+            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+        }
+
         public void CalculateResults(List<string> playerNames, List<int> playerTimes)
         {
+            //Be sure any new players get added into database
+            foreach(string player in playerNames)
+            {
+                InputPlayerInMatch(player);
+            }
+
             //Just in case something was wrong
             if (playerNames.Count != playerTimes.Count)
             {
@@ -83,7 +197,11 @@ namespace Glicko2Rankings
 
 
             calculator.UpdateRatings(results);
+            UpdateXml();
+
         }
+
+        //THESE FUNCTIONS NEED TO BE CHANGED SO THAT THE DATA IS GRABBED FROM THE XML AND NOT THE DICTIONARY
 
         /// <summary>
         /// Returns a list of ratings in the order of the list it was given.
@@ -101,7 +219,7 @@ namespace Glicko2Rankings
                 {
                     ratings.Add((int)players[player].GetRating());
                 }
-                catch(KeyNotFoundException)
+                catch (KeyNotFoundException)
                 {
                     Log.Info("Player does not have a rating!");
                 }
@@ -124,7 +242,7 @@ namespace Glicko2Rankings
             {
                 rating = (int)players[playerName].GetRating();
             }
-            catch(KeyNotFoundException)
+            catch (KeyNotFoundException)
             {
                 Log.Info("Player does not have a rating!");
             }
