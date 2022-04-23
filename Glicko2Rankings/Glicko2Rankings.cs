@@ -1,10 +1,7 @@
 ﻿extern alias Distance;
 
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Linq;
-using UnityEngine;
 
 namespace Glicko2Rankings
 {
@@ -27,7 +24,7 @@ namespace Glicko2Rankings
 
             Server.OnPlayerValidatedEvent.Connect(player =>
             {
-                //When a new player joins, post their rank (if they have one)
+                //When a new player joins, add them to the unchecked list
                 uncheckedPlayers.Add(player);
             });
 
@@ -39,6 +36,7 @@ namespace Glicko2Rankings
                 matchEnded = false;
             });
 
+            //Side wheelie easter egg
             DistanceServerMain.GetEvent<Events.Instanced.TrickComplete>().Connect(trickData =>
             {
                 if (trickData.sideWheelieMeters_ > 20)
@@ -51,6 +49,8 @@ namespace Glicko2Rankings
                 }
             });
 
+            //When a player's data is submitted, go through the uncheckedPlayers list and post ranks of each player in the list.
+            //There is a chance that a player's rank fails to get posted, but the situation is rare.
             DistanceServerMain.GetEvent<Events.ClientToServer.SubmitPlayerData>().Connect((d, info) =>
             {
                 if (uncheckedPlayers.Count > 0)
