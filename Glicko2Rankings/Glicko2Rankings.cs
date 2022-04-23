@@ -2,9 +2,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Linq;
 using UnityEngine;
-using MongoDB.Driver;
 
 namespace Glicko2Rankings
 {
@@ -17,6 +17,7 @@ namespace Glicko2Rankings
 
         private bool matchEnded = false;
         private SimulateMatch calculateMatch = new SimulateMatch();
+        private List<DistancePlayer> uncheckedPlayers = new List<DistancePlayer>();
 
         public override void Start()
         {
@@ -27,19 +28,53 @@ namespace Glicko2Rankings
             Server.OnPlayerValidatedEvent.Connect(player =>
             {
                 //When a new player joins, post their rank (if they have one)
-                int playerRank = calculateMatch.GetRating(player.Name);
-                if (playerRank > 0)
-                {
-                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rank: [-]" + playerRank));
-                }
+                uncheckedPlayers.Add(player);
             });
 
             //A new match has started (Adding server version so I know I updated the server)
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.2.7"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v0.4.0"));
                 matchEnded = false;
+            });
+
+            DistanceServerMain.GetEvent<Events.Instanced.TrickComplete>().Connect(trickData =>
+            {
+                if (trickData.sideWheelieMeters_ > 20)
+                {
+                    System.Random rnd = new System.Random();
+                    if(rnd.Next(0,11) < 1)
+                    {
+                        Server.SayChat(DistanceChat.Server("Glicko2Rankings:sidewheelie", "SIIICK " + trickData.sideWheelieMeters_ + " METER SIDE WHEELIE"));
+                    }
+                }
+            });
+
+            DistanceServerMain.GetEvent<Events.ClientToServer.SubmitPlayerData>().Connect((d, info) =>
+            {
+                if (uncheckedPlayers.Count > 0)
+                {
+                    bool success = false;
+                    foreach (DistancePlayer player in uncheckedPlayers)
+                    {
+                        if (player.Name == d.data_.playerName_)
+                        {
+                            string colorid = GetColorID(d.data_.carColors_);
+                            int playerRank = calculateMatch.GetRating(player.Name + "|||||" + colorid);
+                            if (playerRank > 0)
+                            {
+                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rank: [-]" + playerRank));
+                            }
+                            success = true;
+                        }
+                    }
+
+                    if(success)
+                    {
+                        uncheckedPlayers.Clear();
+                    }
+                }
             });
 
             //Loop through all players and check if all finished, if they all did grab their finish times
@@ -72,7 +107,8 @@ namespace Glicko2Rankings
                     {
                         foreach (DistancePlayer player in distancePlayers)
                         {
-                            playersInMatch.Add(player.Name);
+                            string colorid = GetColorID(player.Car.CarColors);
+                            playersInMatch.Add(player.Name + "|||||" + colorid);
 
                             if (player.Car.FinishType == Distance::FinishType.Normal)
                                 timeInMatch.Add(player.Car.FinishData);
@@ -88,16 +124,33 @@ namespace Glicko2Rankings
 
                         for (int i = 0; i < playersInMatch.Count; i++)
                         {
-                            Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + playersInMatch[i] + "'s new rank: [-]" + playerRankings[i]));
+                            Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "'s new rank: [-]" + playerRankings[i]));
                         }
 
                         playersInMatch.Clear();
                         timeInMatch.Clear();
+                        playerRankings.Clear();
                     }
 
                     Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
                 }
+
+                distancePlayers.Clear();
             });
+        }
+
+        /// <summary>
+        /// Gets the colorID for that specific player. This ID is based on the car's colors.
+        /// </summary>
+        /// <param name="carColor">The player's CarColors needed to generate the ID</param>
+        /// <returns></returns>
+        private string GetColorID(Distance.CarColors carColor)
+        {
+            Regex regex = new Regex("[^1-9]");
+            return regex.Replace(carColor.primary_.ToString()
+                                + carColor.secondary_.ToString()
+                                + carColor.glow_.ToString()
+                                + carColor.sparkle_.ToString(), "");
         }
     }
 }

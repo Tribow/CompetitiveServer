@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Xml;
-using System.Xml.XPath;
 using System.Security;
 using System.IO;
 //using System.Reflection;
@@ -10,6 +9,7 @@ namespace Glicko2Rankings
 {
     //Right now this is entirely local data, which is cringe. I will need to put this in a database so it can
     //Upload the rankings to a database and update that information with new data whenever necessary
+    //Unfortunately, this doesn't seem viable so for now the data is saved to an xml document
     public class SimulateMatch
     {
         private Dictionary<string, Rating> players = new Dictionary<string, Rating>();
@@ -33,14 +33,11 @@ namespace Glicko2Rankings
                 foreach (XmlNode node in nodes)
                 {
                     
-                    if (node.Attributes.Count > 0)
+                    if (node.Attributes.Count > 1)
                     {
                         //Add the Player node's information to our dictionary to make sure it updates rankings correctly
                         Rating rating = new Rating(calculator);
                         double importantNumber;
-                        Log.Debug(node.FirstChild.InnerText);
-                        Log.Debug(node.ChildNodes[1].InnerText);
-                        Log.Debug(node.LastChild.InnerText);
                         bool success = double.TryParse(node.FirstChild.InnerText, out importantNumber);
                         if (!success)
                             rating.SetRatingDeviation(1500); //1500 is the default rank
@@ -56,7 +53,8 @@ namespace Glicko2Rankings
                             rating.SetVolatility(0.06); //0.06 is the default volatility
                         else
                             rating.SetVolatility(importantNumber);
-                        players.Add(node.Attributes[0].Value, rating);
+                        players.Add(node.Attributes[0].Value + "|||||" + node.Attributes[1].Value, rating);
+                        Log.Info("Loaded player " + node.Attributes[0].Value + " with ID: " + node.Attributes[1].Value);
                     }
                 }
             }
@@ -76,18 +74,21 @@ namespace Glicko2Rankings
         /// <summary>
         /// Adds new players from the match into the database.
         /// </summary>
-        /// <param name="player"></param>
-        private void InputPlayerInMatch(string player)
+        /// <param name="playerInfo">This should contain the player's name & colorid. Formatted like this name|||||colorid</param>
+        private void InputPlayerInMatch(string playerInfo)
         {
             Rating playerRating = new Rating(calculator);
+            string[] splitInfo = playerInfo.Split(new string[] { "|||||" }, StringSplitOptions.None);
+            string player = splitInfo[0];
+            string colorid = splitInfo[1];
       
             //For updating the XML
             XmlNodeList nodes = rankXml.SelectNodes("//Player");
             foreach (XmlNode node in nodes)
             {
-                if (node.Attributes.Count > 0)
+                if (node.Attributes.Count > 1)
                 {
-                    if (player == SecurityElement.Escape(node.Attributes[0].Value))
+                    if (player == SecurityElement.Escape(node.Attributes[0].Value) && colorid == node.Attributes[1].Value)
                     {
                         Log.Info("Player already exists in database!");
                         return;
@@ -100,18 +101,21 @@ namespace Glicko2Rankings
             XmlNode playerNode = rankXml.CreateElement("Player");
             XmlAttribute name = rankXml.CreateAttribute("name");
             name.Value = SecurityElement.Escape(player);
+            XmlAttribute id = rankXml.CreateAttribute("id");
+            id.Value = colorid;
             XmlElement rank = rankXml.CreateElement("Rank");
             XmlElement rankDeviation = rankXml.CreateElement("RankDeviation");
             XmlElement volatility = rankXml.CreateElement("Volatility");
             root.AppendChild(playerNode);
             playerNode.Attributes.Append(name);
+            playerNode.Attributes.Append(id);
             playerNode.AppendChild(rank);
             rank.InnerText = playerRating.GetRating().ToString();
             playerNode.AppendChild(rankDeviation);
             rankDeviation.InnerText = playerRating.GetRatingDeviation().ToString();
             playerNode.AppendChild(volatility);
             volatility.InnerText = playerRating.GetVolatility().ToString();
-            Log.Info("Added " + player + " to the Xml");
+            Log.Info("Added " + player + " with ID: " + colorid + " to the Xml");
 
             rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
 
@@ -119,7 +123,7 @@ namespace Glicko2Rankings
             //For updating the Dictionary
             try
             {
-                players.Add(player, playerRating);
+                players.Add(playerInfo, playerRating);
             }
             catch (ArgumentException)
             {
@@ -130,31 +134,33 @@ namespace Glicko2Rankings
 
         private void UpdateXml()
         {
-            List<string> playerNames = new List<string>(players.Keys);
-            for(int i = 0; i < playerNames.Count; i++)
+            List<string> playerInfos = new List<string>(players.Keys);
+            for(int i = 0; i < playerInfos.Count; i++)
             {
-                string safeString = SecurityElement.Escape(playerNames[i]);
-                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Rank");
-                nodeToChange.InnerText = players[playerNames[i]].GetRating().ToString();
-                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/RankDeviation");
-                nodeToChange.InnerText = players[playerNames[i]].GetRatingDeviation().ToString();
-                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safeString + "']/Volatility");
-                nodeToChange.InnerText = players[playerNames[i]].GetVolatility().ToString();
+                string[] splitInfo = playerInfos[i].Split(new string[] { "|||||" }, StringSplitOptions.None);
+                string safePlayer = SecurityElement.Escape(splitInfo[0]);
+                string colorid = splitInfo[1];
+                XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safePlayer + "'][@id='" + colorid + "']/Rank");
+                nodeToChange.InnerText = players[playerInfos[i]].GetRating().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safePlayer + "'][@id='" + colorid + "']/RankDeviation");
+                nodeToChange.InnerText = players[playerInfos[i]].GetRatingDeviation().ToString();
+                nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safePlayer + "'][@id='" + colorid + "']/Volatility");
+                nodeToChange.InnerText = players[playerInfos[i]].GetVolatility().ToString();
             }
             
             rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
         }
 
-        public void CalculateResults(List<string> playerNames, List<int> playerTimes)
+        public void CalculateResults(List<string> playerInfos, List<int> playerTimes)
         {
             //Be sure any new players get added into database
-            foreach(string player in playerNames)
+            foreach(string info in playerInfos)
             {
-                InputPlayerInMatch(player);
+                InputPlayerInMatch(info);
             }
 
             //Just in case something was wrong
-            if (playerNames.Count != playerTimes.Count)
+            if (playerInfos.Count != playerTimes.Count)
             {
                 Log.Info("The amount of players do not match the amount of times!");
                 return;
@@ -164,30 +170,30 @@ namespace Glicko2Rankings
             {
                 //Times that are 0 are spectators or joined laters
                 if (playerTimes[i] == 0)
-                    results.AddParticipant(players[playerNames[i]]);
+                    results.AddParticipant(players[playerInfos[i]]);
 
                 for (int j = 0; j < playerTimes.Count; j++)
                 {
                     if (j > i)
                     {
                         //Player names should not be the same nor should any of the times be 0
-                        if (playerNames[i] != playerNames[j] && playerTimes[i] != 0 && playerTimes[j] != 0)
+                        if (playerInfos[i] != playerInfos[j] && playerTimes[i] != 0 && playerTimes[j] != 0)
                         {
                             //Checking for Draw
                             if (playerTimes[i] == playerTimes[j])
                             {
-                                results.AddDraw(players[playerNames[i]], players[playerNames[j]]);
+                                results.AddDraw(players[playerInfos[i]], players[playerInfos[j]]);
                             }
                             else
                             {
                                 //Win or Lose Results
                                 if (playerTimes[i] < playerTimes[j])
                                 {
-                                    results.AddResult(players[playerNames[i]], players[playerNames[j]]);
+                                    results.AddResult(players[playerInfos[i]], players[playerInfos[j]]);
                                 }
                                 else
                                 {
-                                    results.AddResult(players[playerNames[j]], players[playerNames[i]]);
+                                    results.AddResult(players[playerInfos[j]], players[playerInfos[i]]);
                                 }
                             }
                         }
@@ -201,19 +207,17 @@ namespace Glicko2Rankings
 
         }
 
-        //THESE FUNCTIONS NEED TO BE CHANGED SO THAT THE DATA IS GRABBED FROM THE XML AND NOT THE DICTIONARY
-
         /// <summary>
         /// Returns a list of ratings in the order of the list it was given.
         /// The list will be empty if none of the players given have a rating
         /// </summary>
-        /// <param name="playerNames">Should be the list of players in a match</param>
+        /// <param name="playerInfos">This should contain a list of player's name & colorid. Formatted like this name|||||colorid</param>
         /// <returns></returns>
-        public List<int> GetSpecificRatings(List<string> playerNames)
+        public List<int> GetSpecificRatings(List<string> playerInfos)
         {
             List<int> ratings = new List<int>();
 
-            foreach (string player in playerNames)
+            foreach (string player in playerInfos)
             {
                 try
                 {
@@ -232,15 +236,15 @@ namespace Glicko2Rankings
         /// Returns a given player's ranking.
         /// Returns 0 if the player does not have a ranking
         /// </summary>
-        /// <param name="playerName">The player you want the ranking for</param>
+        /// <param name="playerInfo">This should contain the player's name & colorid. Formatted like this name|||||colorid</param>
         /// <returns></returns>
-        public int GetRating(string playerName)
+        public int GetRating(string playerInfo)
         {
             int rating = 0;
 
             try
             {
-                rating = (int)players[playerName].GetRating();
+                rating = (int)players[playerInfo].GetRating();
             }
             catch (KeyNotFoundException)
             {
