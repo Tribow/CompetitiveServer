@@ -6,13 +6,13 @@
 # Setup
 If you're already familiar with the setup of the Distance-Server then that's great! If you don't then <a href=https://github.com/Corecii/Distance-Server>you really should go here before you do anything with this plugin.</a> 
 
-Download the zip file in the releases page. 
-The `Glicko2Rankings.dll` should be moved into the `Plugins` folder within your `DistanceServer` directory.
+Download the zip file in the releases page. <br />
+The `Glicko2Rankings.dll` should be moved into the `Plugins` folder within your `DistanceServer` directory. <br />
 `BasicAutoServer.json` should be moved into the `config` folder within your `DistanceServer` directory. Replace the json that is in there already if needed. You will need to edit this file to your own preferences, but what is already written is preferred. If you don't understand what you're doing, see Corecii's <a href=https://github.com/Corecii/Distance-Server/blob/master/PLUGINS.md>PLUGINS.md</a> for configuration explanations.
 
-In your `Plugins` folder, you should remove `VoteCommands.dll` as well as the `VoteCommands.json` in the `config` folder if they are there.
-Why?
-Well ideally, the competitive server should be able to pick from a 'competitively viable' set of levels on its own. Allowing players to vote would also allow players to pick levels that are not 'competitively viable' or pick levels that they are specifically good at. There should not be a bias in the level select.
+In your `Plugins` folder, you should remove `VoteCommands.dll` as well as the `VoteCommands.json` in the `config` folder if they are there. <br />
+Why? <br />
+Well ideally, the competitive server should be able to pick from a 'competitively viable' set of levels on its own. Allowing players to vote would also allow players to pick levels that are not 'competitively viable' or pick levels that they are specifically good at. There should not be a bias in the level select. <br />
 
 That's it! Your competitive server should be all set.
 
