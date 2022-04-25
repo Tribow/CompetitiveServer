@@ -6,9 +6,10 @@
 # Setup
 If you're already familiar with the setup of the Distance-Server then that's great! If you don't then <a href=https://github.com/Corecii/Distance-Server>you really should go here before you do anything with this plugin.</a> 
 
-Download the zip file in the releases page. <br />
+Download the latest zip file in the releases page. <br />
 The `Glicko2Rankings.dll` should be moved into the `Plugins` folder within your `DistanceServer` directory. <br />
-`BasicAutoServer.json` should be moved into the `config` folder within your `DistanceServer` directory. Replace the json that is in there already if needed. You will need to edit this file to your own preferences, but what is already written is preferred. If you don't understand what you're doing, see Corecii's <a href=https://github.com/Corecii/Distance-Server/blob/master/PLUGINS.md>PLUGINS.md</a> for configuration explanations.
+The `0WorkshopSearch.dll` should be moved in the same place, replace the one that is there with this one.
+`BasicAutoServer.json` should be moved into the `config` folder within your `DistanceServer` directory. Replace the json that is in there already if needed. You will need to edit this file to your own preferences, but what is already written is preferred. There should not be anything in the `Workshop` section of the json. The Glicko2Rankings plugin will find the competitive levels on its own. If you don't understand what you're doing, see Corecii's <a href=https://github.com/Corecii/Distance-Server/blob/master/PLUGINS.md>PLUGINS.md</a> for configuration explanations.
 
 In your `Plugins` folder, you should remove `VoteCommands.dll` as well as the `VoteCommands.json` in the `config` folder if they are there. <br />
 Why? <br />
@@ -17,6 +18,6 @@ Well ideally, the competitive server should be able to pick from a 'competitivel
 That's it! Your competitive server should be all set.
 
 # Known Issues
-* Ideally, the Competitive Server should be able to load levels that the community has decided to be competitively viable, but there doesn't seem to be a way to load specific levels from a workshop collection currently. Right now there needs to be some kind of workaround.
 * The XML file is only saved locally. The data is not saved on a server anywhere so if multiple competitive servers are running they will have different rankings. This creates the risk of losing the XML somehow as well.
-*  The auto-server does not shuffle the order of the levels, that's cringe.
+* Once the server reaches the end of the playlist the levels will be played in the exact same order again.
+* If the Competitive Levels collection ever gets updated the Server will not know unless it gets fully restarted again.
