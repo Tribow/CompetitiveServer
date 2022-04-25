@@ -33,7 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0WorkshopSearch">
+    <Reference Include="0WorkshopSearch, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>D:\Documents\DistanceServer\Plugins\0WorkshopSearch.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
@@ -387,7 +388,6 @@
   <ItemGroup>
     <Compile Include="Glicko2Rankings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RankModel.cs" />
     <Compile Include="Rating.cs" />
     <Compile Include="RatingCalculator.cs" />
     <Compile Include="RatingPeriodResults.cs" />
