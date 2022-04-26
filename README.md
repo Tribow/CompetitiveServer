@@ -8,7 +8,8 @@ If you're already familiar with the setup of the Distance-Server then that's gre
 
 Download the latest zip file in the releases page. <br />
 The `Glicko2Rankings.dll` should be moved into the `Plugins` folder within your `DistanceServer` directory. <br />
-The `0WorkshopSearch.dll` should be moved in the same place, replace the one that is there with this one.
+Add the `Glicko2Rankings.dll` directory to the `Server.json` located in the `config` folder. <br />
+The `0WorkshopSearch.dll` should be moved in the same place, replace the one that is there with this one. <br />
 `BasicAutoServer.json` should be moved into the `config` folder within your `DistanceServer` directory. Replace the json that is in there already if needed. You will need to edit this file to your own preferences, but what is already written is preferred. There should not be anything in the `Workshop` section of the json. The Glicko2Rankings plugin will find the competitive levels on its own. If you don't understand what you're doing, see Corecii's <a href=https://github.com/Corecii/Distance-Server/blob/master/PLUGINS.md>PLUGINS.md</a> for configuration explanations.
 
 In your `Server.json` in the `config` folder, you should remove the `VoteCommands.dll` directory.<br />
