@@ -149,7 +149,7 @@ namespace Glicko2Rankings
                             if (player.Car.FinishType == Distance::FinishType.Normal && !joinedLate)
                                 timeInMatch.Add(player.Car.FinishData);
                             else if (player.Car.FinishType == Distance::FinishType.Spectate && !joinedLate)
-                                timeInMatch.Add(player.Car.FinishData + 2000);
+                                timeInMatch.Add(player.Car.FinishData + 2000000);
                             else
                                 timeInMatch.Add(0);
                         }
