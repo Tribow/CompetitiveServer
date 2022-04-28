@@ -86,7 +86,7 @@ namespace Glicko2Rankings
                             int playerRank = calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid);
                             if (playerRank > 0)
                             {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rank: [-]" + playerRank));
+                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rating: [-]" + playerRank));
                             }
                             success = true;
                         }
