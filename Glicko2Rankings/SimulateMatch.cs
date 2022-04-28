@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Xml;
 using System.Security;
+using System.Linq;
 using System.IO;
 //using System.Reflection;
 
@@ -23,10 +24,10 @@ namespace Glicko2Rankings
         public SimulateMatch()
         {
             //Log.Debug(Directory.GetCurrentDirectory() + @"\RankData.xml");
-            if (File.Exists(Directory.GetCurrentDirectory() + @"\RankData.xml"))
+            if (File.Exists(Directory.GetCurrentDirectory() + @"/RankData.xml"))
             {
                 Log.Info("RankData file exists!");
-                rankXml.Load(Directory.GetCurrentDirectory() + @"\RankData.xml");
+                rankXml.Load(Directory.GetCurrentDirectory() + @"/RankData.xml");
 
                 //Fill the dictionary with data from the xml here.
                 XmlNodeList nodes = rankXml.SelectNodes("//Player");
@@ -67,7 +68,7 @@ namespace Glicko2Rankings
                 root.AppendChild(player);
 
 
-                rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+                rankXml.Save(Directory.GetCurrentDirectory() + @"/RankData.xml");
             }
         }
 
@@ -88,7 +89,7 @@ namespace Glicko2Rankings
             {
                 if (node.Attributes.Count > 1)
                 {
-                    if (player == SecurityElement.Escape(node.Attributes[0].Value) && colorid == node.Attributes[1].Value)
+                    if (player == node.Attributes[0].Value && colorid == node.Attributes[1].Value)
                     {
                         Log.Info("Player already exists in database!");
                         return;
@@ -100,7 +101,7 @@ namespace Glicko2Rankings
             XmlNode root = rankXml.SelectSingleNode("RankData");
             XmlNode playerNode = rankXml.CreateElement("Player");
             XmlAttribute name = rankXml.CreateAttribute("name");
-            name.Value = SecurityElement.Escape(player);
+            name.Value = player;
             XmlAttribute id = rankXml.CreateAttribute("id");
             id.Value = colorid;
             XmlElement rank = rankXml.CreateElement("Rank");
@@ -117,7 +118,7 @@ namespace Glicko2Rankings
             volatility.InnerText = playerRating.GetVolatility().ToString();
             Log.Info("Added " + player + " with ID: " + colorid + " to the Xml");
 
-            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            rankXml.Save(Directory.GetCurrentDirectory() + @"/RankData.xml");
 
 
             //For updating the Dictionary
@@ -138,7 +139,7 @@ namespace Glicko2Rankings
             for(int i = 0; i < playerInfos.Count; i++)
             {
                 string[] splitInfo = playerInfos[i].Split(new string[] { "|||||" }, StringSplitOptions.None);
-                string safePlayer = SecurityElement.Escape(splitInfo[0]);
+                string safePlayer = splitInfo[0];
                 string colorid = splitInfo[1];
                 XmlNode nodeToChange = rankXml.SelectSingleNode("RankData/Player[@name='" + safePlayer + "'][@id='" + colorid + "']/Rank");
                 nodeToChange.InnerText = players[playerInfos[i]].GetRating().ToString();
@@ -148,7 +149,7 @@ namespace Glicko2Rankings
                 nodeToChange.InnerText = players[playerInfos[i]].GetVolatility().ToString();
             }
             
-            rankXml.Save(Directory.GetCurrentDirectory() + @"\RankData.xml");
+            rankXml.Save(Directory.GetCurrentDirectory() + @"/RankData.xml");
         }
 
         public void CalculateResults(List<string> playerInfos, List<int> playerTimes)
@@ -252,6 +253,23 @@ namespace Glicko2Rankings
             }
 
             return rating;
+        }
+
+        //This literally wont work the way it is rn
+        public string GetRank(string playerInfo)
+        {
+            List<double> sortedRatings = new List<double>();
+            foreach(Rating rating in players.Values)
+            {
+                sortedRatings.Add(rating.GetRating());
+            }
+
+            sortedRatings = sortedRatings.OrderBy(number => number).ToList();
+            for(int i = 0; i < sortedRatings.Count; i++)
+            {
+                Log.Info(sortedRatings[i]);
+            }
+            return "N/A";
         }
     }
 }
