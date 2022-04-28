@@ -20,5 +20,3 @@ That's it! Your competitive server should be all set.
 
 # Known Issues
 * The XML file is only saved locally. The data is not saved on a server anywhere so if multiple competitive servers are running they will have different rankings. This creates the risk of losing the XML somehow as well.
-* Once the server reaches the end of the playlist the levels will be played in the exact same order again.
-* If the Competitive Levels collection ever gets updated the Server will not know unless it gets fully restarted again.
