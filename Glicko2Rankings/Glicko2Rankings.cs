@@ -38,7 +38,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.1.0"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.1"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
@@ -51,12 +51,13 @@ namespace Glicko2Rankings
                 }
             });
 
-            //Track the players who were at the start of the match (The check is too early so not using it)
-            /*Server.OnLevelStartedEvent.Connect(() =>
+            //Track the players who were at the start of the match. 
+            //This check happens really early, would rather have it be right when the countdown ends
+            Server.OnLevelStartedEvent.Connect(() =>
             {
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:levelStarted", "LEVEL START!"));
+                //Server.SayChat(DistanceChat.Server("Glicko2Rankings:levelStarted", "LEVEL START!"));
                 playersAtLevelStart = new List<DistancePlayer>(Server.DistancePlayers.Values);
-            });*/
+            });
 
             //Side wheelie easter egg
             DistanceServerMain.GetEvent<Events.Instanced.TrickComplete>().Connect(trickData =>
@@ -83,10 +84,11 @@ namespace Glicko2Rankings
                         if (player.Name == d.data_.playerName_)
                         {
                             string colorid = GetColorID(d.data_.carColors_);
-                            int playerRank = calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid);
-                            if (playerRank > 0)
+                            int playerRating = calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid);
+                            string playerRank = calculateMatch.GetRank(SecurityElement.Escape(player.Name) + "|||||" + colorid);
+                            if (playerRating > 0)
                             {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rating: [-]" + playerRank));
+                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:joinedPlayerRank", "[19e681]" + player.Name + " Rating: [-]" + playerRating + " | Rank: " + playerRank));
                             }
                             success = true;
                         }
@@ -134,18 +136,20 @@ namespace Glicko2Rankings
                         foreach (DistancePlayer player in distancePlayers)
                         {
                             //What's commentated out is jank so I'm not using it yet
-                            //bool joinedLate = true; //If this remains true, the player will be marked a participant
+                            bool joinedLate = true; //If this remains true, the player will be marked a participant
                             string colorid = GetColorID(player.Car.CarColors);
                             playersInMatch.Add(SecurityElement.Escape(player.Name) + "|||||" + colorid);
                             oldplayerRatings.Add(calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid));
 
-
-                            /*foreach(DistancePlayer startPlayer in playersAtLevelStart)
+                            //Check to be sure the player in the match was a player at the start of the match
+                            foreach(DistancePlayer startPlayer in playersAtLevelStart)
                                 if(startPlayer == player)
-                                    joinedLate = false;*/
+                                    joinedLate = false;
 
-                            if (player.Car.FinishType == Distance::FinishType.Normal /*&& !joinedLate*/)
+                            if (player.Car.FinishType == Distance::FinishType.Normal && !joinedLate)
                                 timeInMatch.Add(player.Car.FinishData);
+                            else if (player.Car.FinishType == Distance::FinishType.Spectate && !joinedLate)
+                                timeInMatch.Add(player.Car.FinishData + 2000);
                             else
                                 timeInMatch.Add(0);
                         }
@@ -153,8 +157,9 @@ namespace Glicko2Rankings
                         //Calculate rankings
                         calculateMatch.CalculateResults(playersInMatch, timeInMatch);
 
-                        //Post rankings in chat
+                        //Post ratings/rankings in chat
                         List<int> playerRatings = calculateMatch.GetSpecificRatings(playersInMatch);
+                        List<string> playerRankings = calculateMatch.GetSpecificRanks(playersInMatch);
 
                         Server.SayChat(DistanceChat.Server("Glicko2Rankings:thelegend", "[19e681]Player[-] | Rating | [00FF00]Earn[-]/[FF0000]Loss[-] | Rank"));
 
@@ -163,11 +168,11 @@ namespace Glicko2Rankings
                             int ratingDifference = playerRatings[i] - oldplayerRatings[i];
                             if (ratingDifference >= 0)
                             {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | +[00FF00]" + ratingDifference + "[-] | [fa8c05]N/A[-]"));
+                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | +[00FF00]" + ratingDifference + "[-] | " + playerRankings[i]));
                             }
                             else
                             {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | [FF0000]" + ratingDifference + "[-] | [fa8c05]N/A[-]"));
+                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | [FF0000]" + ratingDifference + "[-] | " + playerRankings[i]));
                             }
                         }
 
@@ -175,6 +180,7 @@ namespace Glicko2Rankings
                         timeInMatch.Clear();
                         playerRatings.Clear();
                         oldplayerRatings.Clear();
+                        playerRankings.Clear();
                     }
 
                     Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
@@ -235,9 +241,9 @@ namespace Glicko2Rankings
                 {
                     BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
                     AutoServer.Playlist.Clear();
-                    AutoServer.Playlist.AddRange(AutoServer.PresetLevels);
                     AutoServer.Playlist.AddRange(results);
                     AutoServer.Playlist.Shuffle();
+                    AutoServer.Playlist.Shuffle(); //Double tap the shuffle lmao
                 }
             }
             updatingPlaylist = false;

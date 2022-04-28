@@ -255,21 +255,91 @@ namespace Glicko2Rankings
             return rating;
         }
 
-        //This literally wont work the way it is rn
+        /// <summary>
+        /// Gets the player's rank and returns it as a string to be displayed.
+        /// If a player lacks a rank for some reason it will return "N/A".
+        /// </summary>
+        /// <param name="playerInfo">This should contain the player's name & colorid. Formatted like this name|||||colorid</param>
+        /// <returns></returns>
         public string GetRank(string playerInfo)
         {
             List<double> sortedRatings = new List<double>();
-            foreach(Rating rating in players.Values)
+            double ratingToCheck = 0;
+            try
+            {
+                ratingToCheck = players[playerInfo].GetRating();
+            }
+            catch (KeyNotFoundException)
+            {
+                Log.Info("Player does not have a rating!");
+                return "N/A";
+            }
+
+            foreach (Rating rating in players.Values)
             {
                 sortedRatings.Add(rating.GetRating());
             }
 
             sortedRatings = sortedRatings.OrderBy(number => number).ToList();
+            sortedRatings.Reverse();
             for(int i = 0; i < sortedRatings.Count; i++)
             {
-                Log.Info(sortedRatings[i]);
+                if (ratingToCheck == sortedRatings[i])
+                {
+                    return (i+1).ToString();
+                }
+
             }
+
+
             return "N/A";
+        }
+
+        /// <summary>
+        /// Returns a list of ranks in the order it was given.
+        /// If a player lacks a rank for some reason it will say "N/A".
+        /// </summary>
+        /// <param name="playerInfo">This should contain the player's name & colorid. Formatted like this name|||||colorid</param>
+        /// <returns></returns>
+        public List<string> GetSpecificRanks(List<string> playerInfo)
+        {
+            List<string> ranks = new List<string>();
+
+            foreach(string player in playerInfo)
+            {
+                List<double> sortedRatings = new List<double>();
+                double ratingToCheck = 0;
+                try
+                {
+                    ratingToCheck = players[player].GetRating();
+                }
+                catch (KeyNotFoundException)
+                {
+                    Log.Info("Player does not have a rating!");
+                    ranks.Add("N/A");
+                }
+
+                foreach (Rating rating in players.Values)
+                {
+                    sortedRatings.Add(rating.GetRating());
+                }
+
+                sortedRatings = sortedRatings.OrderBy(number => number).ToList();
+                sortedRatings.Reverse();
+                bool success = false;
+                for (int i = 0; i < sortedRatings.Count; i++)
+                {
+                    if (ratingToCheck == sortedRatings[i])
+                    {
+                        ranks.Add((i + 1).ToString());
+                        success = true;
+                    }
+                }
+                if(!success)
+                    ranks.Add("N/A");
+            }
+
+            return ranks;
         }
     }
 }
