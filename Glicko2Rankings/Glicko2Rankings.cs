@@ -16,8 +16,10 @@ namespace Glicko2Rankings
         public override int Priority => -6;
         public override SemanticVersion ServerVersion => new SemanticVersion("0.4.0");
 
+
         private bool matchEnded = false;
         private bool updatingPlaylist = false;
+        private bool diversionlmao = true;
         private SimulateMatch calculateMatch = new SimulateMatch();
         private List<DistancePlayer> uncheckedPlayers = new List<DistancePlayer>();
         private List<DistancePlayer> playersAtLevelStart = new List<DistancePlayer>();
@@ -38,10 +40,17 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.2"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.3"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
+
+                //The first level that gets chosen is always diversion so this will skip diversion I think maybe
+                if(diversionlmao)
+                {
+                    AutoServer.NextLevel();
+                    diversionlmao = false;
+                }
 
                 //If the current level is the same as the last level of the playlist
                 if (Server.CurrentLevel == AutoServer.Playlist[AutoServer.Playlist.Count - 1] && !updatingPlaylist)
@@ -57,6 +66,7 @@ namespace Glicko2Rankings
             {
                 //Server.SayChat(DistanceChat.Server("Glicko2Rankings:levelStarted", "LEVEL START!"));
                 playersAtLevelStart = new List<DistancePlayer>(Server.DistancePlayers.Values);
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:leveldifficulty", "Level Difficulty: " + Server.CurrentLevel.Difficulty.ToString()));
             });
 
             //Side wheelie easter egg
@@ -135,7 +145,6 @@ namespace Glicko2Rankings
                     {
                         foreach (DistancePlayer player in distancePlayers)
                         {
-                            //What's commentated out is jank so I'm not using it yet
                             bool joinedLate = true; //If this remains true, the player will be marked a participant
                             string colorid = GetColorID(player.Car.CarColors);
                             playersInMatch.Add(SecurityElement.Escape(player.Name) + "|||||" + colorid);
@@ -226,12 +235,6 @@ namespace Glicko2Rankings
                 }
 
                 List<DistanceLevel> results = retriever.Results.ConvertAll(result => result.DistanceLevelResult);
-                string listString = $"Levels ({results.Count}):";
-                foreach (DistanceLevel level in results)
-                {
-                    listString += $"\n{level.Name}";
-                }
-                Log.Info(listString);
 
                 if (results.Count == 0)
                 {
@@ -241,9 +244,16 @@ namespace Glicko2Rankings
                 {
                     BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
                     AutoServer.Playlist.Clear();
+                    AutoServer.Playlist.AddRange(OfficialPlaylist);
                     AutoServer.Playlist.AddRange(results);
                     AutoServer.Playlist.Shuffle();
-                    AutoServer.Playlist.Shuffle(); //Double tap the shuffle lmao
+
+                    string listString = $"Levels ({results.Count}):";
+                    foreach (DistanceLevel level in AutoServer.Playlist)
+                    {
+                        listString += $"\n{level.Name}";
+                    }
+                    Log.Info(listString);
                 }
             }
             updatingPlaylist = false;
@@ -263,6 +273,61 @@ namespace Glicko2Rankings
                                 + carColor.glow_.ToString()
                                 + carColor.sparkle_.ToString(), "");
         }
+
+        List<DistanceLevel> OfficialPlaylist = new List<DistanceLevel>()
+        {
+            new DistanceLevel()
+            {
+                Name = "Forgotten Utopia",
+                RelativeLevelPath = "OfficialLevels/Forgotten Utopia.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "A Deeper Void",
+                RelativeLevelPath = "OfficialLevels/A Deeper Void.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Eye of the Storm",
+                RelativeLevelPath = "OfficialLevels/Eye of the Storm.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "The Sentinel Still Watches",
+                RelativeLevelPath = "OfficialLevels/The Sentinel Still Watches.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Shadow of the Beast",
+                RelativeLevelPath = "OfficialLevels/Shadow of the Beast.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Pulse of a Violent Heart",
+                RelativeLevelPath = "OfficialLevels/Pulse of a Violent Heart.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "It Was Supposed To Be Perfect",
+                RelativeLevelPath = "OfficialLevels/It Was Supposed To Be Perfect.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+
+        };
+
 
        
     }
@@ -290,10 +355,11 @@ namespace Glicko2Rankings
         public static void Shuffle<T>(this IList<T> list)
         {
             int n = list.Count;
+            Random rnd = ThreadSafeRandom();
             while (n > 1)
             {
                 n--;
-                int k = ThreadSafeRandom().Next(n + 1);
+                int k = rnd.Next(n + 1);
                 T value = list[k];
                 list[k] = list[n];
                 list[n] = value;
