@@ -40,17 +40,10 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.3"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.4"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
-
-                //The first level that gets chosen is always diversion so this will skip diversion I think maybe
-                if(diversionlmao)
-                {
-                    AutoServer.NextLevel();
-                    diversionlmao = false;
-                }
 
                 //If the current level is the same as the last level of the playlist
                 if (Server.CurrentLevel == AutoServer.Playlist[AutoServer.Playlist.Count - 1] && !updatingPlaylist)
@@ -254,6 +247,14 @@ namespace Glicko2Rankings
                         listString += $"\n{level.Name}";
                     }
                     Log.Info(listString);
+
+                    //The first level that gets chosen is always diversion so this will skip diversion I think maybe
+                    if (diversionlmao)
+                    {
+                        diversionlmao = false;
+                        AutoServer.NextLevel();
+
+                    }
                 }
             }
             updatingPlaylist = false;
@@ -325,11 +326,644 @@ namespace Glicko2Rankings
                 WorkshopFileId = "",
                 GameMode = "Sprint",
             },
-
+            new DistanceLevel()
+            {
+                Name = "Abyss",
+                RelativeLevelPath = "OfficialLevels/Abyss.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Aftermath",
+                RelativeLevelPath = "OfficialLevels/Aftermath.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Approach",
+                RelativeLevelPath = "OfficialLevels/Approach.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Brink",
+                RelativeLevelPath = "OfficialLevels/Brink.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Broken Symmetry",
+                RelativeLevelPath = "OfficialLevels/Broken Symmetry.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Cataclysm",
+                RelativeLevelPath = "OfficialLevels/Cataclysm.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Chroma",
+                RelativeLevelPath = "OfficialLevels/Chroma.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Compression",
+                RelativeLevelPath = "OfficialLevels/Compression.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Contagion",
+                RelativeLevelPath = "OfficialLevels/Contagion.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Continuum",
+                RelativeLevelPath = "OfficialLevels/Continuum.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Corruption",
+                RelativeLevelPath = "OfficialLevels/Corruption.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Departure",
+                RelativeLevelPath = "OfficialLevels/Departure.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Destination Unknown",
+                RelativeLevelPath = "OfficialLevels/Destination Unknown.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Deterrence",
+                RelativeLevelPath = "OfficialLevels/Deterrence.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Digital",
+                RelativeLevelPath = "OfficialLevels/Digital.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Dissolution",
+                RelativeLevelPath = "OfficialLevels/Dissolution.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Diversion",
+                RelativeLevelPath = "OfficialLevels/Diversion.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Eclipse",
+                RelativeLevelPath = "OfficialLevels/Eclipse.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Embers",
+                RelativeLevelPath = "OfficialLevels/Embers.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Factory",
+                RelativeLevelPath = "OfficialLevels/Factory.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Falling Through",
+                RelativeLevelPath = "OfficialLevels/Falling Through.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Friction",
+                RelativeLevelPath = "OfficialLevels/Friction.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Fulcrum",
+                RelativeLevelPath = "OfficialLevels/Fulcrum.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Ground Zero",
+                RelativeLevelPath = "OfficialLevels/Ground Zero.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Hard Light Transfer",
+                RelativeLevelPath = "OfficialLevels/Hard Light Transfer.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Incline",
+                RelativeLevelPath = "OfficialLevels/Incline.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Isolation",
+                RelativeLevelPath = "OfficialLevels/Isolation.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Le Teleputo",
+                RelativeLevelPath = "OfficialLevels/Le Teleputo.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Liminal",
+                RelativeLevelPath = "OfficialLevels/Liminal.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Lost Society",
+                RelativeLevelPath = "OfficialLevels/Lost Society.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Luminescence",
+                RelativeLevelPath = "OfficialLevels/Luminescence.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Micro",
+                RelativeLevelPath = "OfficialLevels/Micro.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Monolith",
+                RelativeLevelPath = "OfficialLevels/Monolith.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Monument",
+                RelativeLevelPath = "OfficialLevels/Monument.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Negative Space",
+                RelativeLevelPath = "OfficialLevels/Negative Space.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Neo Seoul",
+                RelativeLevelPath = "OfficialLevels/Neo Seoul.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Neo Seoul II",
+                RelativeLevelPath = "OfficialLevels/Neo Seoul II.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Observatory",
+                RelativeLevelPath = "OfficialLevels/Observatory.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Overload",
+                RelativeLevelPath = "OfficialLevels/Overload.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Precept",
+                RelativeLevelPath = "OfficialLevels/Precept.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Projection",
+                RelativeLevelPath = "OfficialLevels/Projection.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Repulsion",
+                RelativeLevelPath = "OfficialLevels/Repulsion.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Research",
+                RelativeLevelPath = "OfficialLevels/Research.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Resonance",
+                RelativeLevelPath = "OfficialLevels/Resonance.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Rooftops",
+                RelativeLevelPath = "OfficialLevels/Rooftops.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Sector 0",
+                RelativeLevelPath = "OfficialLevels/Sector 0.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Serenity",
+                RelativeLevelPath = "OfficialLevels/Serenity.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "SR Motorplex",
+                RelativeLevelPath = "OfficialLevels/SR Motorplex.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Station",
+                RelativeLevelPath = "OfficialLevels/Station.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Stronghold",
+                RelativeLevelPath = "OfficialLevels/Stronghold.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Tharsis Tholus",
+                RelativeLevelPath = "OfficialLevels/Tharsis Tholus.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "The Observer Effect",
+                RelativeLevelPath = "OfficialLevels/The Observer Effect.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Virtual Rift",
+                RelativeLevelPath = "OfficialLevels/Virtual Rift.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "White Lightning Returns",
+                RelativeLevelPath = "OfficialLevels/White Lightning Returns.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Zenith",
+                RelativeLevelPath = "OfficialLevels/Zenith.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Affect",
+                RelativeLevelPath = "CommunityLevels/Affect.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Binary Construct",
+                RelativeLevelPath = "CommunityLevels/Binary Construct.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Candles of Hekate",
+                RelativeLevelPath = "CommunityLevels/Candles of Hekate.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Event Horizon",
+                RelativeLevelPath = "CommunityLevels/Event Horizon.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Forsaken Shrine",
+                RelativeLevelPath = "CommunityLevels/Forsaken Shrine.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Gravity",
+                RelativeLevelPath = "CommunityLevels/Gravity.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Hardline",
+                RelativeLevelPath = "CommunityLevels/Hardline.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Impulse",
+                RelativeLevelPath = "CommunityLevels/Impulse.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Industrial Fury",
+                RelativeLevelPath = "CommunityLevels/Industrial Fury.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Inferno",
+                RelativeLevelPath = "CommunityLevels/Inferno.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Instability",
+                RelativeLevelPath = "CommunityLevels/Instability.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Knowledge",
+                RelativeLevelPath = "CommunityLevels/Knowledge.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Mentality",
+                RelativeLevelPath = "CommunityLevels/Mentality.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Method",
+                RelativeLevelPath = "CommunityLevels/Method.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Moonlight",
+                RelativeLevelPath = "CommunityLevels/Moonlight.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Noir",
+                RelativeLevelPath = "CommunityLevels/Noir.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Outrun",
+                RelativeLevelPath = "CommunityLevels/Outrun.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Paradise Lost",
+                RelativeLevelPath = "CommunityLevels/Paradise Lost.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Particular Journey",
+                RelativeLevelPath = "CommunityLevels/Particular Journey.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Red",
+                RelativeLevelPath = "CommunityLevels/Red.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Ruin",
+                RelativeLevelPath = "CommunityLevels/Ruin.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Sea",
+                RelativeLevelPath = "CommunityLevels/Sea.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Sender",
+                RelativeLevelPath = "CommunityLevels/Sender.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Shafty",
+                RelativeLevelPath = "CommunityLevels/Shafty.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Shallow",
+                RelativeLevelPath = "CommunityLevels/Shallow.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Shrine",
+                RelativeLevelPath = "CommunityLevels/Shrine.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Static Fire Signal",
+                RelativeLevelPath = "CommunityLevels/Static Fire Signal.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Sugar Rush",
+                RelativeLevelPath = "CommunityLevels/Sugar Rush.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Sword",
+                RelativeLevelPath = "CommunityLevels/Sword.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Tetreal",
+                RelativeLevelPath = "CommunityLevels/Tetreal.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Turbines",
+                RelativeLevelPath = "CommunityLevels/Turbines.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Volcanic Rush",
+                RelativeLevelPath = "CommunityLevels/Volcanic Rush.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Whisper",
+                RelativeLevelPath = "CommunityLevels/Whisper.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "White",
+                RelativeLevelPath = "CommunityLevels/White.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Wired",
+                RelativeLevelPath = "CommunityLevels/Wired.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
+            new DistanceLevel()
+            {
+                Name = "Yellow",
+                RelativeLevelPath = "CommunityLevels/Yellow.bytes",
+                WorkshopFileId = "",
+                GameMode = "Sprint",
+            },
         };
-
-
-       
     }
 
     /// <summary>
