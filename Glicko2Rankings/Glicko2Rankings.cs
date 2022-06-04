@@ -108,7 +108,7 @@ namespace Glicko2Rankings
             Server.OnChatMessageEvent.Connect((chatMessage) =>
             {
                 //The "/rank" command will post the player's rank information once they send it
-                try
+                /*try
                 {
                     string[] chatSplit = chatMessage.Message.Split(new string[] { ": " }, StringSplitOptions.None);
                     if (chatSplit[1] == "/rank")
@@ -127,7 +127,7 @@ namespace Glicko2Rankings
                 catch(ArgumentException e)
                 {
                     //do nothin i guess. I don't want to potentially log all the time
-                }
+                }*/
             });
 
             //Loop through all players and check if all finished, if they all did grab their finish times
