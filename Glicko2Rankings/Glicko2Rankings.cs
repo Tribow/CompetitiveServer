@@ -40,7 +40,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.2.4"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.3.0"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
@@ -104,92 +104,148 @@ namespace Glicko2Rankings
                 }
             });
 
+            //Commands
+            Server.OnChatMessageEvent.Connect((chatMessage) =>
+            {
+                //The "/rank" command will post the player's rank information once they send it
+                try
+                {
+                    string[] chatSplit = chatMessage.Message.Split(new string[] { ": " }, StringSplitOptions.None);
+                    if (chatSplit[1] == "/rank")
+                    {
+
+                        DistancePlayer player = Server.GetDistancePlayer(chatMessage.SenderGuid);
+                        string colorid = GetColorID(player.Car.CarColors);
+                        int playerRating = calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid);
+                        string playerRank = calculateMatch.GetRank(SecurityElement.Escape(player.Name) + "|||||" + colorid);
+                        if (playerRating > 0)
+                        {
+                            Server.SayChat(DistanceChat.Server("Glicko2Rankings:commandPlayerRank", "[19e681]" + player.Name + " Rating: [-]" + playerRating + " | Rank: " + playerRank));
+                        }
+                    }
+                }
+                catch(ArgumentException e)
+                {
+                    //do nothin i guess. I don't want to potentially log all the time
+                }
+            });
+
             //Loop through all players and check if all finished, if they all did grab their finish times
             //If enough players were in a match, calculate their rank and display it
             //(THis part can have a NullReference but I'm not sure how yet)
             DistanceServerMain.GetEvent<Events.Instanced.Finished>().Connect((instance, data) =>
             {
-                bool allPlayersFinished = true;
+                TryCalculateMatch();
+            });
 
-                List<DistancePlayer> distancePlayers = new List<DistancePlayer>(Server.DistancePlayers.Values);
+            //Check when a player leaves too
+            Server.OnPlayerDisconnectedEvent.Connect((player) =>
+            {
+                TryCalculateMatch();
+            });
+        }
 
-                //Check if all players have finished
-                if (Server.DistancePlayers.Count > 0 && !matchEnded)
+        private void TryCalculateMatch()
+        {
+            bool allPlayersFinished = true;
+
+            List<DistancePlayer> distancePlayers = new List<DistancePlayer>(Server.DistancePlayers.Values);
+
+            //Check if all players have finished
+            if (Server.DistancePlayers.Count > 0 && !matchEnded)
+            {
+                foreach (DistancePlayer player in distancePlayers)
+                {
+                    if (!player.Car.Finished)
+                    {
+                        allPlayersFinished = false;
+                    }
+                }
+            }
+
+            //When all are finished, it's time to do calculations
+            if (allPlayersFinished && !matchEnded)
+            {
+                matchEnded = true;
+
+                List<PlayerMatchData> playerMatchDatas = new List<PlayerMatchData>();
+                List<string> playersInMatch = new List<string>(); //List that holds playerinfo of each player in match
+                List<int> timeInMatch = new List<int>(); //List that holds the finish time of each player in the match
+                List<int> oldplayerRatings = new List<int>(); //List the holds the previous ratings before the calculation of each player in the match
+
+                if (distancePlayers.Count > 1)
                 {
                     foreach (DistancePlayer player in distancePlayers)
                     {
-                        if (!player.Car.Finished)
-                        {
-                            allPlayersFinished = false;
-                        }
+                        bool joinedLate = true; //If this remains true, the player will be marked a participant
+                        string colorid = GetColorID(player.Car.CarColors);
+                        string playerID = SecurityElement.Escape(player.Name) + "|||||" + colorid;
+                        PlayerMatchData matchData = new PlayerMatchData();
+                        matchData.PlayerID = playerID; //playersInMatch.Add(playerID);
+                        matchData.OldRating = calculateMatch.GetRating(playerID); //oldplayerRatings.Add(calculateMatch.GetRating(playerID));
+                        matchData.PlayerName = player.Name;
+
+
+                        //Check to be sure the player in the match was a player at the start of the match
+                        foreach (DistancePlayer startPlayer in playersAtLevelStart)
+                            if (startPlayer == player)
+                                joinedLate = false;
+
+                        if (player.Car.FinishType == Distance::FinishType.Normal && !joinedLate)
+                            matchData.PlayerTime = player.Car.FinishData; //timeInMatch.Add(player.Car.FinishData);
+                        else if (player.Car.FinishType == Distance::FinishType.Spectate && !joinedLate)
+                            matchData.PlayerTime = player.Car.FinishData + 2000000; //timeInMatch.Add(player.Car.FinishData + 2000000);
+                        else
+                            matchData.PlayerTime = 0; //timeInMatch.Add(0);
+
+                        playerMatchDatas.Add(matchData);
                     }
-                }
 
-                //When all are finished, it's time to do calculations
-                if (allPlayersFinished && !matchEnded)
-                {
-                    matchEnded = true;
-                    
-                    List<string> playersInMatch = new List<string>(); //List that holds playerinfo of each player in match
-                    List<int> timeInMatch = new List<int>(); //List that holds the finish time of each player in the match
-                    List<int> oldplayerRatings = new List<int>(); //List the holds the previous ratings before the calculation of each player in the match
+                    playerMatchDatas.Sort();
 
-                    if (distancePlayers.Count > 1)
+                    foreach (PlayerMatchData matchData in playerMatchDatas)
                     {
-                        foreach (DistancePlayer player in distancePlayers)
-                        {
-                            bool joinedLate = true; //If this remains true, the player will be marked a participant
-                            string colorid = GetColorID(player.Car.CarColors);
-                            playersInMatch.Add(SecurityElement.Escape(player.Name) + "|||||" + colorid);
-                            oldplayerRatings.Add(calculateMatch.GetRating(SecurityElement.Escape(player.Name) + "|||||" + colorid));
-
-                            //Check to be sure the player in the match was a player at the start of the match
-                            foreach(DistancePlayer startPlayer in playersAtLevelStart)
-                                if(startPlayer == player)
-                                    joinedLate = false;
-
-                            if (player.Car.FinishType == Distance::FinishType.Normal && !joinedLate)
-                                timeInMatch.Add(player.Car.FinishData);
-                            else if (player.Car.FinishType == Distance::FinishType.Spectate && !joinedLate)
-                                timeInMatch.Add(player.Car.FinishData + 2000000);
-                            else
-                                timeInMatch.Add(0);
-                        }
-
-                        //Calculate rankings
-                        calculateMatch.CalculateResults(playersInMatch, timeInMatch);
-
-                        //Post ratings/rankings in chat
-                        List<int> playerRatings = calculateMatch.GetSpecificRatings(playersInMatch);
-                        List<string> playerRankings = calculateMatch.GetSpecificRanks(playersInMatch);
-
-                        Server.SayChat(DistanceChat.Server("Glicko2Rankings:thelegend", "[19e681]Player[-] | Rating | [00FF00]Earn[-]/[FF0000]Loss[-] | Rank"));
-
-                        for (int i = 0; i < playersInMatch.Count; i++)
-                        {
-                            int ratingDifference = playerRatings[i] - oldplayerRatings[i];
-                            if (ratingDifference >= 0)
-                            {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | +[00FF00]" + ratingDifference + "[-] | " + playerRankings[i]));
-                            }
-                            else
-                            {
-                                Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + distancePlayers[i].Name + "[-] | " + playerRatings[i] + " | [FF0000]" + ratingDifference + "[-] | " + playerRankings[i]));
-                            }
-                        }
-
-                        playersInMatch.Clear();
-                        timeInMatch.Clear();
-                        playerRatings.Clear();
-                        oldplayerRatings.Clear();
-                        playerRankings.Clear();
+                        playersInMatch.Add(matchData.PlayerID);
+                        timeInMatch.Add(matchData.PlayerTime);
+                        oldplayerRatings.Add(matchData.OldRating);
                     }
 
-                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
+
+                    //Calculate rankings
+                    calculateMatch.CalculateResults(playersInMatch, timeInMatch);
+
+                    //Post ratings/rankings in chat
+                    List<int> playerRatings = calculateMatch.GetSpecificRatings(playersInMatch);
+                    List<string> playerRankings = calculateMatch.GetSpecificRanks(playersInMatch);
+
+                    Server.SayChat(DistanceChat.Server("Glicko2Rankings:thelegend", "[19e681]Player[-] | Rating | [00FF00]Earn[-]/[FF0000]Loss[-] | Rank"));
+
+                    for (int i = 0; i < playersInMatch.Count; i++)
+                    {
+                        int ratingDifference = playerRatings[i] - oldplayerRatings[i];
+
+                        if (ratingDifference >= 0)
+                        {
+                            Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + playerMatchDatas[i].PlayerName + "[-] | " + playerRatings[i] + " | +[00FF00]" + ratingDifference + "[-] | " + playerRankings[i]));
+                        }
+                        else
+                        {
+                            Server.SayChat(DistanceChat.Server("Glicko2Rankings:playerRanking", "[19e681]" + playerMatchDatas[i].PlayerName + "[-] | " + playerRatings[i] + " | [FF0000]" + ratingDifference + "[-] | " + playerRankings[i]));
+                        }
+                    }
+
+                    playerRatings.Clear();
+                    playerRankings.Clear();
+                    playersInMatch.Clear();
+                    timeInMatch.Clear();
+                    oldplayerRatings.Clear();
+                    playerMatchDatas.Clear();
                 }
 
-                distancePlayers.Clear();
-            });
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:allFinished", "[00FFFF]Match Ended![-]"));
+            }
+
+            distancePlayers.Clear();
         }
 
         /// <summary>
@@ -554,13 +610,6 @@ namespace Glicko2Rankings
             {
                 Name = "Monolith",
                 RelativeLevelPath = "OfficialLevels/Monolith.bytes",
-                WorkshopFileId = "",
-                GameMode = "Sprint",
-            },
-            new DistanceLevel()
-            {
-                Name = "Monument",
-                RelativeLevelPath = "OfficialLevels/Monument.bytes",
                 WorkshopFileId = "",
                 GameMode = "Sprint",
             },
