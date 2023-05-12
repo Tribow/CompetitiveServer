@@ -21,4 +21,4 @@ Well ideally, the competitive server should be able to pick from a 'competitivel
 That's it! Your competitive server should be all set.
 
 # Known Issues
-* The XML file is only saved locally. The data is not saved on a server anywhere so if multiple competitive servers are running they will have different rankings. This creates the risk of losing the XML somehow as well.
+
