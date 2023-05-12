@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Security;
 using System.Threading;
@@ -23,10 +24,20 @@ namespace Glicko2Rankings
         private SimulateMatch calculateMatch = new SimulateMatch();
         private List<DistancePlayer> uncheckedPlayers = new List<DistancePlayer>();
         private List<DistancePlayer> playersAtLevelStart = new List<DistancePlayer>();
+        private Process DatabaseHandler;
 
         public override void Start()
         {
             Log.Info("Welcome to the ranking system!");
+
+            try
+            {
+                DatabaseHandler = Process.Start(@"CompetitiveServerDatabaseHandler.exe");
+            }
+            catch(Exception e)
+            {
+                Log.Error("Could not find the DatabaseHandler! Without it I cannot communicate to the database!");
+            }
 
             DistanceServerMainStarter.Instance.StartCoroutine(FindWorkshopLevels());
 
@@ -40,7 +51,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.3.0"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.4.0"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
@@ -143,6 +154,18 @@ namespace Glicko2Rankings
             {
                 TryCalculateMatch();
             });
+
+            AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
+            {
+                try 
+                { 
+                    DatabaseHandler.Kill(); 
+                } 
+                catch(Exception e) 
+                { 
+                    Log.Error("There is no Database Handler!"); 
+                }
+            };
         }
 
         private void TryCalculateMatch()
