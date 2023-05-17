@@ -256,6 +256,51 @@ namespace Glicko2Rankings
         }
 
         /// <summary>
+        /// Gets all players with the given name and returns a list of the players
+        /// </summary>
+        /// <param name="playerName">The name to search for</param>
+        /// <returns>Note that the strings within the list are formatted like this: name|||||colorid</returns>
+        public List<string> GetPlayers(string playerName)
+        {
+            List<string> returnStringList = new List<string>();
+
+            foreach(string player in players.Keys)
+            {
+                string[] splitData = player.Split(new string[] { "|||||" }, StringSplitOptions.None);
+                string regexName = splitData[0];
+
+                if (regexName == playerName)
+                {
+                    returnStringList.Add(player);
+                }
+            }
+
+            return returnStringList;
+        }
+
+        /// <summary>
+        /// Gets All players at the given rank and returns a list of the players. 
+        /// </summary>
+        /// <param name="rank">The rank number to search for</param>
+        /// <returns>Note that the strings within the list are formatted like this: name|||||colorid</returns>
+        public List<string> GetPlayersAtRank(int rank)
+        {
+            List<string> returnStringList = new List<string>();
+            List<Rating> sortedRatings = players.Values.ToList();
+
+            sortedRatings = sortedRatings.OrderByDescending(number => number.GetRating()).ToList();
+            for (int i = 0; i < sortedRatings.Count; i++)
+            {
+                if(i+1 == rank)
+                {
+                    return players.Where(pair => pair.Value == sortedRatings[i]).Select(pair => pair.Key).ToList();
+                }
+            }
+
+            return returnStringList;
+        }
+
+        /// <summary>
         /// Gets the player's rank and returns it as a string to be displayed.
         /// If a player lacks a rank for some reason it will return "N/A".
         /// </summary>
@@ -280,8 +325,7 @@ namespace Glicko2Rankings
                 sortedRatings.Add(rating.GetRating());
             }
 
-            sortedRatings = sortedRatings.OrderBy(number => number).ToList();
-            sortedRatings.Reverse();
+            sortedRatings = sortedRatings.OrderByDescending(number => number).ToList();
             for(int i = 0; i < sortedRatings.Count; i++)
             {
                 if (ratingToCheck == sortedRatings[i])
