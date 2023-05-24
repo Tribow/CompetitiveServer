@@ -51,7 +51,7 @@ namespace Glicko2Rankings
             Server.OnLevelStartInitiatedEvent.Connect(() =>
             {
                 Server.SayChat(DistanceChat.Server("Glicko2Rankings:matchEnded", "[00FFFF]A new match has started![-]"));
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.5.0"));
+                Server.SayChat(DistanceChat.Server("Glicko2Rankings:serverVersion", "Server Version: v1.5.1"));
                 matchEnded = false;
 
                 BasicAutoServer.BasicAutoServer AutoServer = DistanceServerMain.Instance.GetPlugin<BasicAutoServer.BasicAutoServer>();
@@ -159,10 +159,6 @@ namespace Glicko2Rankings
                             } 
                         }
                     }
-                    else
-                    {
-                        Server.SayChat(DistanceChat.Server("Glicko2Rankings:commandSearchedPlayersFailed", $"There are no players named {rankInput} in the database"));
-                    }
                 }
                 else if (Regex.Match(chatMessage.Message, @"/rank").Success)
                 {
@@ -183,7 +179,6 @@ namespace Glicko2Rankings
             //(THis part can have a NullReference but I'm not sure how yet)
             DistanceServerMain.GetEvent<Events.Instanced.Finished>().Connect((instance, data) =>
             {
-                Server.SayChat(DistanceChat.Server("Glicko2Rankings:testFinishData", $"Player Finish Data: {data.finishData_}"));
                 TryCalculateMatch();
             });
 
@@ -256,7 +251,7 @@ namespace Glicko2Rankings
                         if (player.Car.FinishType == Distance::FinishType.Normal && !joinedLate)
                             matchData.PlayerTime = player.Car.FinishData; //timeInMatch.Add(player.Car.FinishData);
                         else if (player.Car.FinishType == Distance::FinishType.DNF && !joinedLate)
-                            matchData.PlayerTime = player.Car.FinishData; //timeInMatch.Add(player.Car.FinishData);
+                            matchData.PlayerTime = 2000000000; //timeInMatch.Add(2000000000);
                         else if (player.Car.FinishType == Distance::FinishType.Spectate && !joinedLate)
                             matchData.PlayerTime = 2100000000; //timeInMatch.Add(2100000000);
                         else
