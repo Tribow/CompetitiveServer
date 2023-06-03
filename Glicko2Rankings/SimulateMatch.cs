@@ -208,6 +208,19 @@ namespace Glicko2Rankings
 
         }
 
+        public void AddRating(string playerInfo, double amount)
+        {
+            try
+            {
+                players[playerInfo].SetRating(players[playerInfo].GetRating() + amount);
+                UpdateXml();
+            }
+            catch (KeyNotFoundException)
+            {
+                Log.Info("Player does not exist or does not have a rating yet!");
+            }
+        }
+
         /// <summary>
         /// Returns a list of ratings in the order of the list it was given.
         /// The list will be empty if none of the players given have a rating

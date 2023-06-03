@@ -7,12 +7,13 @@ namespace Glicko2Rankings
     {
         public string PlayerID { get; set; }
         public string PlayerName { get; set; }
+        public string Color { get; set; }
         public int PlayerTime { get; set; }
         public int OldRating { get; set; }
 
         public override string ToString()
         {
-            return "ID: " + PlayerID + "   Name: " + PlayerName + "   Finish Time: " + PlayerTime + "   Previous Rating: " + OldRating; 
+            return $"ID: {PlayerID}   Name: {PlayerName}   Color: {Color}   Finish Time: {PlayerTime}   Previous Rating: {OldRating}"; 
         }
 
         public override bool Equals(object obj)
